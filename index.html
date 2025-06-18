@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<!--
+Infographic generated based on the provided student research report.
+Student Report Title: 학습 도우미 AI, 어디까지 써야할까? 학생들의 생성형 AI 활용 실태와 학습 태도 분석
+Date of Generation: 2025-05-30
+Key Technologies Used: HTML, Tailwind CSS, Chart.js (via CDN), Intersection Observer API for animations
+Constraints: Single HTML file, no external JS/CSS (except CDNs), no SVG/Mermaid.js.
+-->
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학습 도우미 AI 활용 실태 분석 인포그래픽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        /* Custom CSS */
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+        body {
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+            color: #263238; /* Dark Text */
+            margin: 0;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            overflow-y: auto; /* Allow vertical scrolling by default */
+            background: #F4F7F9; /* Default background when content is revealed */
+            background-attachment: scroll; /* Allow background to scroll with content */
+            transition: background 0.8s ease-out; /* Smooth transition for background property */
+        }
+
+        /* Initial splash screen that covers the entire viewport */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000; /* Ensure it's on top */
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Changed to center to group content */
+            align-items: center;
+            background: linear-gradient(to bottom, #577067, #51895370, transparent); /* Your initial gradient */
+            transition: opacity 1s ease-out, transform 1s ease-out; /* Smooth fade and slide out */
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #splashScreen.fade-out {
+            opacity: 0;
+            transform: translateY(-100vh); /* Slide up and out */
+            pointer-events: none; /* Make it unclickable after fade */
+        }
+
+        /* Header content within the splash screen */
+        #mainHeaderSplash {
+            padding: 3rem 1rem;
+            width: 100%;
+            max-width: 4xl;
+            box-sizing: border-box;
+            color: #FFFFFF;
+        }
+        #mainHeaderSplash h1 { font-size: 5rem; } /* Adjusted for splash screen */
+        /* Updated color for subtitle to match scroll arrow color */
+        #mainHeaderSplash p:nth-of-type(1) { font-size: 3rem; color: rgb(208, 226, 216); } 
+        #mainHeaderSplash p:nth-of-type(2) { font-size: 1.5rem; } /* Adjusted for splash screen */
+
+
+        /* Scroll arrows within the splash screen */
+        #scrollArrowsSplash {
+            margin-top: 2rem; /* Added margin to space it from the header text */
+            padding-bottom: 3rem; /* Keep some padding from bottom of viewport */
+            color: rgb(0, 127, 57);
+            text-align: center;
+        }
+        .scroll-arrow {
+            animation: bounce 1.5s infinite;
+            cursor: pointer;
+            display: inline-block;
+            margin: 0 0.5rem;
+            color: rgb(171, 182, 176);
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-3px); }
+            60% { transform: translateY(-1px); }
+        }
+
+        /* Main Header for the content area (no longer sticky) */
+        #mainHeaderContent {
+            background-color: #819A91; /* Solid background - Already matches the gradient start color */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.5s ease-in-out;
+            text-align: center;
+            color: white;
+            padding: 1rem 0;
+            opacity: 0;
+            transform: translateY(-100%); /* Start above */
+            width: 100%; /* Ensure it spans full width */
+        }
+        #mainHeaderContent.show-header {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #mainHeaderContent h1 {
+            font-size: 2.75rem; /* Smaller font for main title */
+            margin-bottom: 0.25rem;
+        }
+        #mainHeaderContent p {
+            font-size: 1.125rem; /* Smaller font for subtitle */
+        }
+
+        /* Main content wrapper - starts hidden above */
+        #fullContentWrapper {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-100vh); /* Start above the viewport */
+            transition: transform 1.2s ease-out, opacity 1.2s ease-out, visibility 1.2s ease-out; /* Slower animation */
+            pointer-events: none;
+            width: 100%;
+        }
+        #fullContentWrapper.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0); /* Swoosh down into view */
+            pointer-events: auto;
+        }
+        
+        .chart-container { 
+            position: relative; 
+            width: 100%; /* Ensure it takes full width of parent */
+            height: 100%; /* Ensure it takes full height of parent */
+        }
+        .report-title-main { color: #FFFFFF; }
+        .section-title-custom { color: #819A91; border-bottom: 3px solid #A7C1A8; padding-bottom: 0.75rem; margin-bottom: 2rem; font-weight: 700; }
+        .card-custom { background-color: #FFFFFF; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .keyword-tag { background-color: #EEEFE0; color: #738981; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 1rem; margin-right: 0.5rem; margin-bottom: 0.5rem; display: inline-block; font-weight: bold; }
+        .recommendation-item { border-left: 4px solid #A7C1A8; padding-left: 1.25rem; margin-bottom: 1rem; }
+        .interview-summary-item { margin-bottom: 0.75rem; }
+        .interview-summary-item strong { color: #819A91; }
+        .pledge-card { background-color: #EEEFE0; border: 2px solid #819A91; box-shadow: 0 10px 15px -3px rgba(129, 154, 145, 0.2), 0 4px 6px -2px rgba(129, 154, 145, 0.1); }
+        .bg-primary-blue { background-color: #819A91; }
+        .text-secondary-teal { color: #A7C1A8; }
+        .bg-supporting-light-blue { background-color: #D1D8BE; }
+        .chartjs-legend-item-text { font-size: 12px !important; }
+        canvas { 
+            image-rendering: pixelated;
+            width: 100% !important; /* Force canvas to take 100% width */
+            height: 100% !important; /* Force canvas to take 100% height */
+        } 
+        .scroll-animate { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .scroll-animate.is-visible { opacity: 1; transform: translateY(0); }
+        .highlight-keyword { color: #387B16; font-weight: 600; }
+    </style>
+</head>
+<body class="antialiased text-lg md:text-xl">
+
+    <!-- Initial splash screen covering the whole viewport -->
+    <div id="splashScreen">
+        <header id="mainHeaderSplash" class="text-white px-4 text-center w-full max-w-7xl mx-auto">
+            <h1 class="text-3xl md:text-9xl font-extrabold report-title-main mb-3">학습 도우미 AI, 어떻게 써야할까?</h1>
+            <p class="text-2xl md:text-6xl font-semibold mb-4" style="color: rgb(226, 232, 229);">학생들의 생성형 AI 활용 실태와 학습 태도 분석</p>
+            <br><br>
+            <p class="text-lg md:text-xl font-medium">4조 : 1405김동현, 1407김진수, 1410신수아, 1413이여설, 1415조유진</p>
+        </header>
+
+        <div id="scrollArrowsSplash" class="text-5xl flex justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-12 h-12 scroll-arrow">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-12 h-12 scroll-arrow">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-12 h-12 scroll-arrow">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Main Header for content (this one becomes sticky) -->
+    <header id="mainHeaderContent" class="text-white px-4 text-center w-full">
+        <h1 class="text-5xl md:text-6xl font-extrabold report-title-main mb-6">학습 도우미 AI, 어떻게 써야할까?</h1>
+        <p class="text-4xl md:text-5xl font-semibold mb-4" style="color: rgb(208, 226, 216);">학생들의 생성형 AI 활용 실태와 학습 태도 분석</p>
+        <p class="text-lg md:text-xl font-medium">4조 : 1405김동현, 1407김진수, 1410신수아, 1413이여설, 1415조유진</p>
+    </header>
+
+    <!-- Wrapper for main content and footer -->
+    <div id="fullContentWrapper">
+        <main class="container mx-auto p-4 md:p-8">
+            <!-- Section 1: 조사 동기와 목적 -->
+            <section id="motivation-purpose" class="mb-28 scroll-animate">
+                <h2 class="text-4xl md:text-5xl section-title-custom mt-8">1. 조사 동기와 목적</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="card-custom p-7">
+                        <h3 class="text-2xl md:text-3xl font-semibold text-primary-blue mb-4">가. 조사 동기</h3>
+                        <p class="text-gray-800 leading-relaxed">최근 AI 기술의 일상적 적용이 확대되면서, 학생들의 학습 및 과제 수행 시 <span class="highlight-keyword">AI 활용이 증가</span>했다. 그러나 <span class="highlight-keyword">AI 의존도 증가</span>에 따른 <span class="highlight-keyword">자기 주도 학습 능력 저하 우려</span>가 제기되었다. 이에 본 조사는 <span class="highlight-keyword">AI 도움의 적정선</span>과 <span class="highlight-keyword">스스로 학습해야 할 범위</span>를 탐색하고자 시작되었다.</p>
+                    </div>
+                    <div class="card-custom p-7">
+                        <h3 class="text-2xl md:text-3xl font-semibold text-primary-blue mb-4">나. 조사 목적</h3>
+                        <p class="text-gray-800 leading-relaxed">본 조사는 <span class="highlight-keyword">AI를 적절히 활용</span>하며 개인의 지식 함양과 사고력 증진 기준점을 모색하는 것을 목표로 한다. <span class="highlight-keyword">AI 의존 지양</span> 및 <span class="highlight-keyword">학습 능력 신장 방법</span>과 <span class="highlight-keyword">효과적인 AI 활용법</span>을 균형 있게 파악하여, <span class="highlight-keyword">AI와 현명하게 공존하는 방향</span>을 제안하고자 한다.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: 조사 계획 -->
+            <section id="research-plan" class="mb-28 scroll-animate">
+                <h2 class="text-4xl md:text-5xl section-title-custom">2. 조사 계획</h2>
+                <div class="card-custom p-7">
+                    <div class="grid md:grid-cols-3 gap-6 text-center">
+                        <div>
+                            <div class="bg-supporting-light-blue p-4 rounded-lg mb-3 inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#819A91" class="w-12 h-12 mx-auto">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-primary-blue mb-2">가. 조사 기간</h3>
+                            <p class="text-gray-700">2025년 5월 12일 ~ 5월 23일</p>
+                        </div>
+                        <div>
+                            <div class="bg-supporting-light-blue p-4 rounded-lg mb-3 inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#819A91" class="w-12 h-12 mx-auto">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 9.0 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-primary-blue mb-2">나. 조사 대상</h3>
+                            <p class="text-gray-700">미림마이스터고 뉴미디어 소프트웨어과 1학년 4반 18명</p>
+                        </div>
+                        <div>
+                            <div class="bg-supporting-light-blue p-4 rounded-lg mb-3 inline-block">
+                                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#819A91" class="w-12 h-12 mx-auto">
+                                       <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-primary-blue mb-2">다. 조사 방법</h3>
+                            <p class="text-gray-700">설문조사, 인터뷰</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: 조사 결과 -->
+            <section id="research-results" class="mb-28 scroll-animate">
+                <h2 class="text-4xl md:text-5xl section-title-custom">3. 조사 결과</h2>
+                
+                <div class="mb-16">
+                    <h3 class="text-3xl md:text-4xl font-semibold text-primary-blue mb-8 text-center">가. 설문조사 분석 결과</h3>
+                    <div class="grid md:grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- CHARTJS_Q1_SURVEY_EFFECTIVENESS -->
+                        <div class="card-custom p-6 flex flex-col items-center">
+                            <h4 class="text-2xl font-semibold mb-2 text-center">Q1. AI 도움, 어느 정도가 효과적일까?</h4>
+                            <p class="text-base text-gray-700 mb-4 text-center">AI의 도움을 어느 정도까지 받는 것이 학습에 가장 효과적이라고 생각하나요?</p>
+                            <div class="chart-container w-full h-72 md:h-80 lg:h-[350px]">
+                                <canvas id="surveyChart1"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- CHARTJS_Q2_SURVEY_UNDERSTANDING -->
+                        <div class="card-custom p-6 flex flex-col items-center">
+                            <h4 class="text-2xl font-semibold mb-2 text-center">Q2. AI 답변, 얼마나 이해할까?</h4>
+                            <p class="text-base text-gray-500 mb-4 text-center">AI가 답을 알려줄 때, 그 내용을 완전히 이해하고 넘어가는 편인가요?</p>
+                            <div class="chart-container w-full h-72 md:h-80 lg:h-[350px]">
+                                <canvas id="surveyChart2"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- CHARTJS_Q3_SURVEY_HINDRANCE -->
+                        <div class="card-custom p-6 flex flex-col items-center">
+                            <h4 class="text-2xl font-semibold mb-2 text-center">Q3. AI 사용, 사고력에 방해될까?</h4>
+                            <p class="text-base text-gray-500 mb-4 text-center">생성형 AI 사용이 스스로 사고하는 능력이나 지식 쌓기에 방해가 된다고 느끼시나요?</p>
+                            <div class="chart-container w-full h-72 md:h-80 lg:h-[350px]">
+                                <canvas id="surveyChart3"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-custom p-7 mt-10">
+                        <h4 class="text-2xl font-semibold text-primary-blue mb-4">설문 결과 요약</h4>
+                        <p class="text-gray-800 leading-relaxed mb-3">학생들은 <span class="highlight-keyword">AI를 유익한 도구로 인식</span>하나, <span class="highlight-keyword">신중하고 자기 주도적 활용</span>을 중시했다. 필요한 순간에 <span class="highlight-keyword">힌트를 얻는 수준(50%)</span>이 가장 적절하다는 의견이 많았고, <span class="highlight-keyword">기본 개념만 익힐 때 참고용(27.8%)</span>으로 사용하는 것이 좋다는 의견도 있었다.</p>
+                        <p class="text-gray-800 leading-relaxed mb-3">대부분 학생(94.5%)은 <span class="highlight-keyword">AI 답변 내용을 이해하고 자기 것으로 만들려는 태도</span>를 보여, AI 활용이 학습 효과에 긍정적일 수 있음을 시사했다.</p>
+                        <p class="text-gray-800 leading-relaxed">AI 사용이 사고력/지식 습득에 방해된다는 인식(36.8%)과 그렇지 않다는 인식(31.6%, 보통 31.6%)이 혼재하여, <span class="highlight-keyword">AI 영향에 대한 학생들의 인식이 다양함</span>을 확인했다.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-3xl md:text-4xl font-semibold text-primary-blue mb-8 text-center">나. 개별 인터뷰 분석 결과</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- HTML_CSS_DIAGRAM_INTERVIEW_SUMMARY_1 -->
+                        <div class="card-custom p-7">
+                            <h4 class="text-2xl font-semibold mb-4 text-center">인터뷰 1: 조정모 학생</h4>
+                            <img src="src/조정모 인터뷰_2.jpg" alt="조정모 학생 인터뷰 사진" class="w-full h-auto rounded-lg mb-5 shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/333333?text=조정모+인터뷰+이미지';">
+                            <div class="space-y-3 text-gray-800 leading-relaxed">
+                                <p class="interview-summary-item"><strong style="color: #1c683c;">인식:</strong> AI는 다양한 시각과 관점을 제시하는 도구. 자신이 생각 못한 방식 제시.</p>
+                                <p class="interview-summary-item"><strong style="color: #1c683c;">태도:</strong> AI 의존에 선을 그음. 스스로 해결 노력, AI는 보조 수단.</p>
+                                <p class="interview-summary-item"><strong style="color: #1c683c;">단점 언급:</strong> 가끔 어색한 표현, 부정확한 정보. 아직 사람만큼 신뢰는 아님.</p>
+                                <p class="interview-summary-item mb-5"><strong style="color: #1c683c;">사용 기준:</strong> 명확한 기준 없음. 상황에 따라 판단. (농담으로 "참참참" 언급)</p>
+                            </div>
+                            <br>
+                            <div class="mt-5">
+                                <h5 class="font-semibold mb-3 text-lg"><strong style="color: #1c683c;">주요 키워드</strong></h5>
+                                <div class="flex flex-wrap">
+                                    <span class="keyword-tag">다양한 시각</span> <span class="keyword-tag">보조 수단</span> <span class="keyword-tag">자기 주도</span> <span class="keyword-tag">부정확성</span> <span class="keyword-tag">신뢰도 문제</span> <span class="keyword-tag">기준 모호</span>
+                                </div>
+                                <br>
+                                <h5 class="font-semibold mb-3 text-lg"><strong style="color: #1c683c;">워드 클라우드</strong></h5>
+                                
+                            </div>
+                            <img src="src/워드클라우드_정모.png" alt="조정모 학생 인터뷰 워드 클라우드" class="w-full h-auto rounded-lg mt-5 shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/333333?text=조정모+워드클라우드';">
+                        </div>
+
+                        <!-- HTML_CSS_DIAGRAM_INTERVIEW_SUMMARY_2 -->
+                        <div class="card-custom p-7">
+                            <h4 class="text-2xl font-semibold mb-4 text-center">인터뷰 2: 정재희 학생</h4>
+                            <img src="src/정재희 인터뷰_2.jpg" alt="정재희 학생 인터뷰 사진" class="w-full h-auto rounded-lg mb-5 shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/333333?text=정재희+인터뷰+이미지';">
+                               <div class="space-y-3 text-gray-800 leading-relaxed">
+                                    <p class="interview-summary-item"><strong style="color: #1c683c;">활용 방식:</strong> 코딩 테스트 준비 시 GPT 코드 단순 복사 아닌, 스스로 해석 및 이해 노력.</p>
+                                    <p class="interview-summary-item"><strong style="color: #1c683c;">효율성:</strong> 모르는 내용 검색보다 빠르게 정보 획득. 정보 탐색 도구로 활용.</p>
+                                    <p class="interview-summary-item"><strong style="color: #1c683c;">장단점 인식:</strong> 숙제 해결 도움(장점), 마감 직전 복붙 우려(단점).</p>
+                                    <p class="interview-summary-item"><strong style="color: #1c683c;">고민:</strong> 수행평가 AI 사용 시 정직하지 않다는 느낌. 도덕적 경계 모호.</p>
+                                    <p class="interview-summary-item"><strong style="color: #1c683c;">사용 기준:</strong> 별다른 기준 없이, 모르면 바로 GPT 활용.</p>
+                                </div>
+                                <br>
+                               <div class="mt-5">
+                                    <h5 class="font-semibold mb-3 text-lg"><strong style="color: #1c683c;">주요 키워드</strong></h5>
+                                    <div class="flex flex-wrap">
+                                        <span class="keyword-tag">코드 해석</span> <span class="keyword-tag">자기 주도 학습</span> <span class="keyword-tag">빠른 정보 탐색</span> <span class="keyword-tag">효율성</span> <span class="keyword-tag">도덕적 고민</span> <span class="keyword-tag">기준 없음</span>
+                                    </div>
+                                    <br>
+                                    <h5 class="font-semibold mb-3 text-lg"><strong style="color: #1c683c;">워드 클라우드</strong></h5>
+                                    
+                                </div>
+                                
+                            <img src="src/워드클라우드_재희.png" alt="정재희 학생 인터뷰 워드 클라우드" class="w-full h-auto rounded-lg mt-5 shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/333333?text=정재희+워드클라우드';">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: 결론 -->
+            <section id="conclusion" class="mb-28 scroll-animate">
+                <h2 class="text-4xl md:text-5xl section-title-custom">4. 결론</h2>
+                <div class="card-custom p-7 mb-10">
+                    <h3 class="text-2xl md:text-3xl font-semibold text-primary-blue mb-8">가. 조사 결과 종합 및 주요 발견점 요약</h3>
+                    <ul class="list-disc list-inside text-gray-800 space-y-3 leading-relaxed">
+                        <li><strong style="color: #1c683c;">AI 활용 정도 인식:</strong> 학생들은 AI 과다 의존보다 <span class="highlight-keyword">적절한 활용(힌트 50%)</span>이 가장 적절하다는 의견이 많았고, <span class="highlight-keyword">기본 개념만 익힐 때 참고용(27.8%)</span>으로 사용하는 것이 좋다는 의견도 있었음.</li>
+                        <li><strong style="color: #1c683c;">AI 답변 이해도 및 학습 노력:</strong> 대다수(94.5%)가 AI 답변을 이해한다고 인식. <span class="highlight-keyword">AI 내용을 소화하려는 노력이 관찰</span>됨.</li>
+                        <li><strong style="color: #1c683c;">AI 사용의 방해 요인 인식:</strong> 36.8%는 <span class="highlight-keyword">AI 사용이 사고력/지식 축적에 방해된다고 우려</span>. AI 영향에 대한 인식이 다양했음.</li>
+                        <li><strong style="color: #1c683c;">AI 사용 기준의 모호성:</strong> AI 사용 시점에 대한 <span class="highlight-keyword">명확한 기준이 없거나 개인별 차이</span>가 존재함.</li>
+                    </ul>
+                </div>
+
+                <div class="card-custom p-7 mb-10">
+                    <h3 class="text-2xl md:text-3xl font-semibold text-primary-blue mb-8">나. 조사를 통해 새롭게 알게 된 점 및 느낀 점</h3>
+                    <p class="text-gray-800 leading-relaxed mb-3">학생들은 <span class="highlight-keyword">AI를 학습 도구로 인식</span>하며 <span class="highlight-keyword">적절한 사용 방식</span>을 고민했다. <span class="highlight-keyword">AI 답변 해석 및 자기 지식화 노력은 긍정적</span>이었다. 동시에 <span class="highlight-keyword">사고력 저하 우려, 사용 기준 부족, 정보 신뢰성 문제</span>가 드러났다. <span class="highlight-keyword">비판적 수용, 윤리적 인식, 자기주도 학습 태도</span>의 중요성을 느꼈다.</p>
+                    <p class="text-gray-800 leading-relaxed">조사 결과는 <span class="highlight-keyword">한국청소년정책연구원의 연구와 유사점</span>을 보이며, 청소년 세대 전체의 과제를 반영한다. <span class="highlight-keyword">AI를 사고 확장 동반자로 보고, 스스로 판단하는 힘이 중요</span>하며, AI 리터러시 교육의 필요성을 시사한다.</p>
+                </div>
+                
+                <div class="card-custom p-7 mb-10">
+                    <h3 class="text-2xl md:text-3xl font-semibold text-primary-blue mb-8">다. 효과적인 AI 활용을 위한 제언</h3>
+                    <div class="space-y-5">
+                        <div class="recommendation-item">
+                            <h3 class="font-semibold text-gray-900 text-xl">💡 1. AI를 '답변기'가 아닌 '사고 확장 도구'로 활용하기</h3>
+                            <p class="text-gray-700">직접적인 답보다 아이디어 획득, 자신의 생각과 비교하며 사고 확장.</p>
+                        </div>
+                        <div class="recommendation-item">
+                            <h4 class="font-semibold text-gray-900 text-xl">🔍 2. AI 답변에 대한 비판적 검토 및 내재화 노력</h4>
+                            <p class="text-gray-700">맹신하지 않고 스스로 이해, 검증하며 자신의 언어로 설명할 수 있도록 소화.</p>
+                        </div>
+                        <div class="recommendation-item">
+                            <h4 class="font-semibold text-gray-900 text-xl">🎯 3. 자신만의 AI 사용 기준 정립하기</h4>
+                            <p class="text-gray-700">학습 목표, 과제 성격, 이해 수준 고려하여 구체적인 상황별 활용 원칙 수립.</p>
+                        </div>
+                        <div class="recommendation-item">
+                            <h4 class="font-semibold text-gray-900 text-xl">⚖️ 4. 윤리적인 AI 활용에 대한 인식 향상</h4>
+                            <p class="text-gray-700">단순 복붙 지양, 도움 받았음을 밝히고 자신만의 결과물 창조.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-custom p-8 pledge-card">
+                    <h3 class="text-2xl md:text-3xl font-bold text-primary-blue mb-4">라. 우리의 다짐</h3>
+                    <p class="text-gray-800 leading-relaxed font-medium">본 조사를 통해 생성형 AI의 효과적인 학습 활용에 대한 깊은 통찰을 얻었다. 앞으로 AI를 사용할 때, 조사 결과에서 나타난 우려들을 경계하고 제언한 내용들을 적극 실천하여, <span class="highlight-keyword">AI에 의존하기보다 AI와 함께 성장하며 스스로 생각하는 힘과 지식을 꾸준히 키워나갈 것을 다짐</span>한다. 또한, 우리가 얻은 지식과 경험을 친구들과 공유하며, 다 함께 AI 시대를 현명하게 헤쳐나갈 수 있도록 노력할 것이다.</p>
+                </div>
+            </section>
+
+            <!-- Section 5: 참고자료 -->
+            <section id="references" class="mb-24 scroll-animate">
+                <h2 class="text-4xl md:text-5xl section-title-custom">5. 참고자료</h2>
+                <div class="card-custom p-7">
+                    <ul class="list-disc list-inside text-gray-800 space-y-3">
+                        <li>인터뷰 녹취록 (조정모, 정재희 학생) - 미림마이스터고등학교 뉴미디어소프트웨어과 1학년 4반 (2025.5.)</li>
+                        <li>google form 조사 설문지 - 미림마이스터고 소프트웨어과 1학년 4반 학생 18명 대상 (2025)</li>
+                        <li>AI 활용 교육 관련 문헌: 한국청소년정책연구원. (2024). 청소년의 생성형 AI 이용실태 및 리터러시 증진 방안 연구.</li>
+                        <li>📖 공통국어 교과서 220p</li>
+                        <li>🤖 Chat GPT, Gemini, Wrtn, Perplexity</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center py-10 px-4 bg-gray-800 text-gray-300 rounded-t-xl mt-16 w-full">
+            <p>본 인포그래픽은 제공된 "학습 도우미 AI, 어디까지 써야할까?" 학생 공동 조사 보고서 내용을 기반으로 생성되었습니다.</p>
+            <p class="text-sm mt-2">&copy; 2025 미림마이스터고 1학년 4반 4조 (내용 기준). 인포그래픽 생성: AI</p>
+        </footer>
+    </div>
+
+    <!-- HTML 끝 부분 주석 -->
+    <!-- 이 HTML 인포그래픽은 학생 보고서의 내용을 시각화한 것입니다. Chart.js와 Tailwind CSS가 사용되었습니다. -->
+
+    <script>
+        // Helper function for label wrapping (한국어 약 16자 기준)
+function wrapLabel(str, maxWidth) {
+    if (!str) return [''];
+    const lines = [];
+    let currentLine = "";
+    const words = str.split(/([\s\(\)\[\]\{\},.;:?\!]+)/); // 공백 및 주요 구두점 기준으로 분리 (유지)
+    
+    for (let i = 0; i < words.length; i++) {
+        const segment = words[i];
+        // Check if adding the segment exceeds maxWidth and it's not just a delimiter/space
+        if (currentLine.length + segment.length > maxWidth && currentLine.length > 0 && !segment.match(/^[\s\(\)\[\]\{\},.;:?\!]+$/)) {
+            lines.push(currentLine.trim());
+            currentLine = "";
+        }
+        currentLine += segment;
+    }
+    if (currentLine.trim().length > 0) {
+        lines.push(currentLine.trim());
+    }
+    
+    // Fallback for long single words or if no breaks were made but it's long
+    if (lines.length === 0 && str.length > 0) {
+        let forcedLines = [];
+        for(let k=0; k < str.length; k += maxWidth) {
+            forcedLines.push(str.substring(k, Math.min(str.length, k + maxWidth)));
+        }
+        return forcedLines.length > 0 ? forcedLines : [str];
+    } else if (lines.length === 0 && str.length === 0) {
+        return [''];
+    } else if (lines.length === 0) {
+        return [str];
+    }
+    return lines;
+}
+
+// Global variables for chart instances and initialization flag
+let surveyChart1Instance = null;
+let surveyChart2Instance = null;
+let surveyChart3Instance = null;
+let chartsInitialized = false; // Flag to ensure charts are initialized only once
+
+// Define totalRespondents and chartColors globally or within initializeAllCharts
+const totalRespondents = 18; // Define total number of respondents for calculations
+
+const chartColors = {
+    primaryGreenishGrey: '#819A91', // Main darker color from palette
+    secondaryLightGreen: '#A7C1A8', // Lighter greenish from palette
+    tertiaryLightGrey: '#D1D8BE',   // Even lighter greenish/grey
+    quaternaryOffWhite: '#EEEFE0',  // Lightest from palette
+    
+    // New explicit palette for Q1 Pie Chart, ordered from darkest to lightest.
+    // This array dictates the color applied based on the sorted rank of data values.
+    q1PieColors: [
+        '#2E7D4F', // Darkest, for highest data value (50%)
+        '#4BA76E', // Next darkest (27.8%)
+        '#6EC27E', // Middle (11.1%)
+        '#A3D977', // Next lightest (5.6%)
+        '#D4ED91'  // Lightest, for lowest data value (5.6%)
+    ],
+
+    // Gradient for bar charts (Q2, Q3), ordered from darkest to lightest.
+    // This array will be applied directly to `backgroundColor` for "bottom darkest, top lightest" effect.
+    barChartGradient: [
+        '#7A8E6F', // Darkest (for bottom bar, if data order is bottom to top)
+        '#819A91',
+        '#A7C1A8',
+        '#D1D8BE',
+        '#EEEFE0'  // Lightest (for top bar)
+    ],
+
+    darkText: '#263238', // Dark text as requested
+    lightBackground: '#F4F7F9', // Main background as requested
+    cardBackground: '#FFFFFF' // Card background as requested
+};
+
+// Function to create a Chart.js instance (kept for general utility if needed elsewhere)
+function createChart(ctx, type, data, options) {
+    // Destroy existing chart instance before creating a new one
+    // 새 차트를 만들기 전에 기존 차트 인스턴스를 파괴합니다.
+    let existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        console.log(`Destroying existing chart for ${ctx.canvas.id}`);
+        existingChart.destroy();
+    }
+    return new Chart(ctx, {
+        type: type,
+        data: data,
+        options: options
+    });
+}
+
+// Custom tooltip positioner to offset from the cursor
+// 툴팁을 마우스 커서에서 오프셋하여 표시하는 커스텀 포지셔너
+Chart.Tooltip.positioners.customOffset = function(items, eventPosition) {
+    // 'this' 컨텍스트는 툴팁 모델입니다.
+    const chart = this.chart;
+    const tooltip = this;
+    const offset = 15; // 원하는 오프셋 (픽셀)
+
+    let x = eventPosition.x + offset;
+    let y = eventPosition.y + offset;
+
+    // 기본적인 경계 검사 (복잡한 레이아웃에는 더 견고한 검사가 필요할 수 있습니다)
+    // 툴팁이 차트 영역을 벗어나지 않도록 조정합니다.
+    if (x + tooltip.width > chart.width) {
+        x = eventPosition.x - tooltip.width - offset;
+    }
+    if (y + tooltip.height > chart.height) {
+        y = eventPosition.y - tooltip.height - offset;
+    }
+
+    // 왼쪽/상단 경계도 확인하여 너무 벗어나지 않도록 합니다.
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+
+    return { x: x, y: y };
+};
+
+
+// Function to initialize all charts with animation
+const initializeAllCharts = () => {
+    console.log("initializeAllCharts called. chartsInitialized:", chartsInitialized); // Debug log
+    if (chartsInitialized) {
+        console.log("Charts already initialized, skipping. Set chartsInitialized to false to re-animate.");
+        return; // Prevent re-initialization
+    }
+
+    // Chart 1: AI 도움 정도 (Pie Chart)
+    const q1Ctx = document.getElementById('surveyChart1')?.getContext('2d');
+    if (q1Ctx) {
+        console.log("Q1 Canvas context found."); // Debug log
+        const q1LabelsOriginal = [
+            "중간중간 힌트를 받는 정도로 사용하는 것이 적절하다", // 50%
+            "기본 개념만 익힐 때 참고용으로 사용하는 것이 좋다",
+            "최소한으로만, 꼭 필요할 때만 사용해야 한다.",
+            "대부분 AI 도움을 받아 빠르게 해결하는 게 효율적이다", 
+            "가능한 모든 문제에 AI를 적극적으로 활용하는 게 좋다"
+        ];
+        const q1DataValuesOriginal = [50, 27.8, 11.1, 5.6, 5.6]; 
+
+        const indexedData = q1DataValuesOriginal.map((value, index) => ({
+            value: value,
+            originalIndex: index
+        }));
+        indexedData.sort((a, b) => b.value - a.value);
+
+        const backgroundColors = new Array(q1LabelsOriginal.length);
+        indexedData.forEach((item, sortedRank) => {
+            backgroundColors[item.originalIndex] = chartColors.q1PieColors[sortedRank];
+        });
+
+        const q1Data = {
+            labels: q1LabelsOriginal.map(label => wrapLabel(label, 16)),
+            datasets: [{
+                data: q1DataValuesOriginal,
+                backgroundColor: backgroundColors,
+                hoverOffset: 8,
+                borderColor: chartColors.cardBackground,
+                borderWidth: 2
+            }]
+        };
+        const q1Options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                animateRotate: true, // Pie chart rotates into view
+                animateScale: true,  // Pie chart scales up
+                duration: 2000 // Animation duration in milliseconds (Increased for visibility)
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 12 },
+                        boxWidth: 15,
+                        boxHeight: 15,
+                        padding: 15,
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((labelArray, i) => {
+                                    const meta = chart.getDatasetMeta(0);
+                                    const style = meta.controller.getStyle(i);
+                                    const dataValue = data.datasets[0].data[i];
+                                    return {
+                                        text: `${labelArray.join(' ')} (${dataValue.toFixed(1)}%)`,
+                                        fillStyle: style.backgroundColor,
+                                        strokeStyle: style.borderColor,
+                                        lineWidth: style.borderWidth,
+                                        hidden: isNaN(dataValue) || meta.data[i].hidden,
+                                        index: i
+                                    };
+                                });
+                            }
+                            return [];
+                        }
+                    }
+                },
+                tooltip: {
+                    position: 'customOffset', // 커스텀 포지셔너 적용
+                    callbacks: {
+                        label: function(context) {
+                            let displayLabel = context.label;
+                            if (Array.isArray(displayLabel)) {
+                                displayLabel = displayLabel.join(' ');
+                            }
+                            const percentage = context.parsed.toFixed(1);
+                            const count = Math.round((parseFloat(percentage) / 100) * totalRespondents);
+                            return `${displayLabel}: ${percentage}% (${count}명)`;
+                        },
+                        title: function(tooltipItems) {
+                            if (tooltipItems.length > 0) {
+                                return q1LabelsOriginal[tooltipItems[0].dataIndex];
+                            }
+                            return '';
+                        }
+                    }
+                }
+            },
+            layout: {
+                padding: 10
+            }
+        };
+        surveyChart1Instance = createChart(q1Ctx, 'pie', q1Data, q1Options);
+        console.log("Q1 Chart created:", surveyChart1Instance); // Debug log
+    } else {
+        console.error("Q1 Canvas context not found!");
+    }
+
+    // Chart 2: AI 답변 이해도 (Bar Chart)
+    const q2Ctx = document.getElementById('surveyChart2')?.getContext('2d');
+    if (q2Ctx) {
+        console.log("Q2 Canvas context found."); // Debug log
+        const q2Labels = ["전혀 그렇지 않다", "그렇지 않다", "보통이다", "그렇다", "매우 그렇다"];
+        const q2DataValues = [0, 0, 5.6, 66.7, 27.8]; 
+        
+        const q2Data = {
+            labels: q2Labels.map(label => wrapLabel(label, 12)),
+            datasets: [{
+                label: '응답 비율 (%)',
+                data: q2DataValues,
+                backgroundColor: [...chartColors.barChartGradient].reverse(),
+                borderColor: chartColors.primaryGreenishGrey,
+                borderWidth: 1,
+                borderRadius: 5,
+            }]
+        };
+        const q2Options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            animation: {
+                x: {
+                    from: 0,
+                    duration: 1000
+                },
+                y: {
+                    from: 0,
+                    duration: 1000
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: '비율 (%)',
+                        font: { size: 12, weight: '500' }
+                    },
+                    ticks: { callback: (value) => value + "%", font: { size: 11 } }
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    position: 'customOffset', // 커스텀 포지셔너 적용
+                    callbacks: {
+                        label: function(context) {
+                            let displayLabel = context.label;
+                            if (Array.isArray(displayLabel)) {
+                                displayLabel = displayLabel.join(' '); 
+                            }
+                            const percentage = context.parsed.x.toFixed(1);
+                            const count = Math.round((parseFloat(percentage) / 100) * totalRespondents);
+                            return `${displayLabel}: ${percentage}% (${count}명)`;
+                        },
+                        title: function(tooltipItems) {
+                            return q2Labels[tooltipItems[0].dataIndex];
+                        }
+                    }
+                }
+            },
+            layout: { padding: { top: 5, bottom: 5, left: 5, right: 10 } }
+        };
+        surveyChart2Instance = createChart(q2Ctx, 'bar', q2Data, q2Options);
+        console.log("Q2 Chart created:", surveyChart2Instance); // Debug log
+    } else {
+        console.error("Q2 Canvas context not found!");
+    }
+
+    // Chart 3: AI 사용, 사고력에 방해될까? (Horizontal Bar Chart)
+    const q3Ctx = document.getElementById('surveyChart3')?.getContext('2d');
+    if (q3Ctx) {
+        console.log("Q3 Canvas context found."); // Debug log
+        const q3Labels = [
+            "전혀 그렇지 않다", "그렇지 않다", "보통이다", "그렇다", "매우 그렇다"
+        ];
+        const q3DataValues = [5.3, 26.3, 31.6, 26.3, 10.5]; 
+        
+        const q3Data = {
+            labels: q3Labels.map(label => wrapLabel(label, 12)),
+            datasets: [{
+                label: '응답 비율 (%)',
+                data: q3DataValues,
+                backgroundColor: [...chartColors.barChartGradient],
+                borderColor: chartColors.primaryGreenishGrey,
+                borderWidth: 1,
+                borderRadius: 5,
+            }]
+        };
+        const q3Options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            animation: {
+                x: {
+                    from: 0,
+                    duration: 1000
+                },
+                y: {
+                    from: 0,
+                    duration: 1000
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 35,
+                    title: {
+                        display: true,
+                        text: '비율 (%)',
+                        font: { size: 12, weight: '500' }
+                    },
+                    ticks: { callback: (value) => value + "%", font: { size: 11 } }
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    position: 'customOffset', // 커스텀 포지셔너 적용
+                    callbacks: {
+                        label: function(context) {
+                            let displayLabel = context.label;
+                            if (Array.isArray(displayLabel)) {
+                                displayLabel = displayLabel.join(' '); 
+                            }
+                            const percentage = context.parsed.x.toFixed(1);
+                            const count = Math.round((parseFloat(percentage) / 100) * totalRespondents);
+                            return `${displayLabel}: ${percentage}% (${count}명)`;
+                        },
+                        title: function(tooltipItems) {
+                            return q3Labels[tooltipItems[0].dataIndex];
+                        }
+                    }
+                }
+            },
+            layout: { padding: { top: 5, bottom: 5, left: 5, right: 10 } }
+        };
+        surveyChart3Instance = createChart(q3Ctx, 'bar', q3Data, q3Options);
+        console.log("Q3 Chart created:", surveyChart3Instance); // Debug log
+    } else {
+        console.error("Q3 Canvas context not found!");
+    }
+    chartsInitialized = true; // Set flag after initialization
+    console.log("Charts initialized successfully."); // Debug log
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const splashScreen = document.getElementById('splashScreen');
+    const scrollArrowsSplash = document.getElementById('scrollArrowsSplash');
+    const mainHeaderContent = document.getElementById('mainHeaderContent');
+    const fullContentWrapper = document.getElementById('fullContentWrapper');
+
+    document.querySelectorAll('img').forEach(img => {
+        if (!img.src.startsWith('http')) {
+            img.setAttribute('onerror', `this.onerror=null;this.src='https://placehold.co/600x400/CCCCCC/333333?text=${encodeURIComponent(img.alt || '이미지 없음')}';`);
+        }
+    });
+
+    scrollArrowsSplash.addEventListener('click', () => {
+        splashScreen.classList.add('fade-out');
+        mainHeaderContent.classList.add('show-header');
+        fullContentWrapper.classList.add('is-visible');
+        setTimeout(() => {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        }, 1000);
+    });
+
+    const animatedElements = document.querySelectorAll('.scroll-animate');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+
+    fullContentWrapper.addEventListener('transitionend', function handler(event) {
+        if (event.propertyName === 'transform' && fullContentWrapper.classList.contains('is-visible')) {
+            animatedElements.forEach(el => {
+                observer.observe(el);
+            });
+            this.removeEventListener('transitionend', handler);
+        }
+    });
+
+    // Set up Intersection Observer for the charts section to trigger animation
+    const chartSection = document.getElementById('research-results');
+    if (chartSection) {
+        console.log("Observing #research-results for chart initialization."); // Debug log
+        const chartObserver = new IntersectionObserver((entries) => { // Removed 'observer' from params as we're explicitly unobserving/re-observing
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (!chartsInitialized) { // Only initialize if not already initialized
+                        console.log("#research-results is intersecting. Initializing charts..."); // Debug log
+                        initializeAllCharts(); // Call the function to create charts with animation
+                    } else {
+                        console.log("#research-results is intersecting, charts already initialized."); // Debug log
+                    }
+                } else {
+                    // When the chart section leaves the viewport, reset the flag and destroy charts
+                    if (chartsInitialized) {
+                        console.log("#research-results leaving viewport. Resetting chartsInitialized to false and destroying charts.");
+                        chartsInitialized = false; // Reset flag
+                        if (surveyChart1Instance) { surveyChart1Instance.destroy(); surveyChart1Instance = null; }
+                        if (surveyChart2Instance) { surveyChart2Instance.destroy(); surveyChart2Instance = null; }
+                        if (surveyChart3Instance) { surveyChart3Instance.destroy(); surveyChart3Instance = null; }
+                    }
+                }
+            });
+        }, {
+            threshold: 0.2 // Trigger when 20% of the section is visible
+        });
+        chartObserver.observe(chartSection);
+    } else {
+        console.error("#research-results section not found!"); // Debug log
+    }
+});
+    </script>
+</body>
+</html>
+
